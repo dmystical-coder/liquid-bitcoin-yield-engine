@@ -1,0 +1,47 @@
+--- General / OS / Editor ---
+macOS
+.DS_Store
+
+Windows
+Thumbs.db
+
+Log files
+*.log
+
+IDE and editor folders
+.vscode/
+.idea/
+
+--- Environment Variables ---
+Never commit your secret keys!
+.env
+.env.*
+!.env.example
+
+--- Node.js Dependencies ---
+This covers both the /backend and /mobile directories
+node_modules/
+npm-debug.log*
+yarn-error.log
+
+--- Backend Specifics (Node.js / TypeScript) ---
+Compiled JavaScript output
+backend/dist/
+
+--- Mobile Specifics (React Native) ---
+Metro bundler cache
+mobile/.metro-cache/
+
+Build artifacts for iOS and Android
+mobile/ios/build/
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/.gradle/
+
+User-specific IDE files for Xcode
+mobile/ios/.xcworkspace
+mobile/ios/.xcuserdata/
+
+--- Contracts Specifics (Cairo / Scarb) ---
+This is the directory where Scarb places the compiled contract artifacts
+contracts/target/
