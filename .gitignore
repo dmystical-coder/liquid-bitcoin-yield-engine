@@ -44,4 +44,4 @@ mobile/ios/.xcuserdata/
 
 --- Contracts Specifics (Cairo / Scarb) ---
 This is the directory where Scarb places the compiled contract artifacts
-contracts/target/
+contracts/target/frontend/src/integrations/

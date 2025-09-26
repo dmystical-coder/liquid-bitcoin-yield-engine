@@ -10,10 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@avnu/avnu-sdk": "^3.1.1",
     "@tailwindcss/vite": "^4.1.13",
+    "dotenv": "^17.2.2",
+    "get-starknet": "^4.0.0",
+    "get-starknet-core": "^4.0.0",
     "lucide-react": "^0.544.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "starknet": "^7.6.4",
     "tailwindcss": "^4.1.13",
     "zustand": "^5.0.8"
   },
