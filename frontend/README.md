@@ -1,73 +1,251 @@
-# React + TypeScript + Vite
+# Liquid BTC - Bitcoin Neobank Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, beautiful Bitcoin neobank interface that allows users to earn yield on their Bitcoin and spend it instantly via the Lightning Network.
 
-Currently, two official plugins are available:
+## 🌟 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Modern UI/UX**: Sleek, dark-mode-first design inspired by leading fintech apps
+- **Multiple Authentication Methods**: Social login, Passkeys, and Bitcoin wallet connection
+- **Real-time Balance Display**: See your BTC balance and USD equivalent with live APY
+- **Lightning Payments**: Scan QR codes or paste invoices to pay instantly
+- **Flexible Deposit Options**: Receive Bitcoin via QR code or connect Xverse wallet
+- **Yield Strategies**: Choose from Standard, Turbo, or Maxi yield strategies
+- **Transaction History**: Track all deposits, withdrawals, payments, and yield earnings
+- **Smooth Animations**: Powered by Framer Motion for delightful interactions
 
-## React Compiler
+## 🚀 Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **React 19** with TypeScript
+- **Vite** for lightning-fast development
+- **Tailwind CSS v4** for styling
+- **Zustand** for state management
+- **Framer Motion** for animations
+- **Lucide React** for icons
+- **QRCode.react** for QR code generation
+- **React QR Reader** for QR code scanning
 
-## Expanding the ESLint configuration
+## 📦 Installation
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. Install dependencies:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. Start the development server:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+3. Build for production:
+
+```bash
+npm run build
+```
+
+4. Preview production build:
+
+```bash
+npm run preview
+```
+
+## 🎨 Design System
+
+The application follows a strict design system:
+
+### Colors (Dark Mode)
+
+- **Background Primary**: `rgb(10, 10, 15)` - Deep charcoal
+- **Surface**: `rgb(25, 25, 35)` - Elevated surface
+- **Text Primary**: `rgb(245, 245, 255)` - Soft white
+- **Text Secondary**: `rgb(160, 160, 175)` - Muted grey
+- **Action/Primary**: `rgb(0, 122, 255)` - Vibrant blue
+- **Success**: `rgb(48, 209, 88)` - Bright green
+- **Error**: `rgb(255, 69, 58)` - Clear red
+
+### Typography
+
+- **Font Family**: Inter (via Google Fonts)
+- **Display Large**: 48px, Semi-Bold (balance display)
+- **Display Small**: 24px, Regular (USD balance)
+- **Heading 1**: 28px, Bold
+- **Body Primary**: 16px, Regular
+- **Body Secondary**: 14px, Medium
+- **Button Text**: 16px, Semi-Bold
+
+### Spacing
+
+- Base unit: 8px
+- All spacing follows 8px increments (8, 16, 24, 32, 48px)
+
+### Borders & Radius
+
+- Major containers: 16px border radius
+- Buttons & inputs: 12px border radius
+- Borders: 1px solid `rgb(45, 45, 55)`
+
+## 📁 Project Structure
+
+```
+src/
+├── components/          # Reusable atomic components
+│   ├── BalanceDisplay.tsx
+│   ├── BottomNav.tsx
+│   ├── Button.tsx
+│   ├── Input.tsx
+│   ├── Modal.tsx
+│   ├── StrategyCard.tsx
+│   └── TransactionRow.tsx
+├── screens/            # Main screen components
+│   ├── DashboardScreen.tsx
+│   ├── MoreScreen.tsx
+│   └── OnboardingScreen.tsx
+├── modals/             # Modal components
+│   ├── AddFundsModal.tsx
+│   ├── PayModal.tsx
+│   └── YieldStrategiesModal.tsx
+├── store/              # State management
+│   └── useAppStore.ts
+├── services/           # API services
+│   └── apiService.ts
+├── lib/                # Utilities
+│   └── utils.ts
+├── App.tsx             # Main app component
+└── index.css           # Global styles
+```
+
+## 🔧 Key Components
+
+### Atomic Components
+
+#### Button
+
+```tsx
+<Button variant="primary" onClick={handleClick} isLoading={loading}>
+  Click Me
+</Button>
+```
+
+#### Input
+
+```tsx
+<Input
+  value={value}
+  onChange={setValue}
+  placeholder="Enter amount"
+  label="Amount (BTC)"
+/>
+```
+
+#### Modal
+
+```tsx
+<Modal isOpen={isOpen} onClose={onClose} title="Modal Title">
+  <p>Modal content goes here</p>
+</Modal>
+```
+
+### Screens
+
+- **OnboardingScreen**: Login/signup with multiple auth methods
+- **DashboardScreen**: Main view with balance and transactions
+- **MoreScreen**: Settings and additional options
+
+### Modals
+
+- **PayModal**: Lightning payment interface with QR scanner
+- **AddFundsModal**: Deposit Bitcoin via QR or Xverse
+- **YieldStrategiesModal**: Choose yield strategy (Standard/Turbo/Maxi)
+
+## 🔄 State Management
+
+The app uses Zustand for simple, powerful state management:
+
+```typescript
+const useAppStore = create((set) => ({
+  // User state
+  user: { isAuthenticated: false, address: null, authMethod: null },
+
+  // Financial state
+  balance: { btc: 0, usd: 0 },
+  yieldInfo: { apy: 0, currentStrategy: "Standard" },
+  transactions: [],
+
+  // UI state
+  activeTab: "Home",
+  isPayModalOpen: false,
+  // ... more state
+
+  // Actions
+  login: async (method, credentials) => {
+    /* ... */
+  },
+  fetchDashboardData: async () => {
+    /* ... */
+  },
+  // ... more actions
+}));
+```
+
+## 🎭 Mock API
+
+The app includes a fully functional mock API service for development:
+
+- Simulates network delays (1 second)
+- Returns realistic mock data
+- Supports all CRUD operations
+- Easy to swap with real API
+
+## 🚧 Future Enhancements
+
+- [ ] Real backend integration
+- [ ] Actual QR code scanning implementation
+- [ ] Bitcoin wallet integrations (Xverse, Leather, etc.)
+- [ ] Push notifications for transactions
+- [ ] Multi-language support
+- [ ] Light mode theme
+- [ ] Advanced analytics dashboard
+- [ ] Recurring payment setup
+- [ ] Export transaction history
+
+## 📱 Responsive Design
+
+The application is fully responsive with a mobile-first approach:
+
+- Max width: 480px (centered on larger screens)
+- Touch-friendly tap targets
+- Optimized for iOS and Android
+- Progressive Web App ready
+
+## 🔐 Security Considerations
+
+- Never stores private keys
+- Uses secure authentication methods (Passkeys, OAuth)
+- All API calls should use HTTPS in production
+- Implements proper session management
+- Rate limiting on sensitive operations
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## 📄 License
+
+This project is part of the Liquid Bitcoin Yield Engine initiative.
+
+## 🙏 Acknowledgments
+
+Built with inspiration from leading fintech and neobank apps:
+
+- Cash App
+- Revolut
+- Strike
+- River Financial
+
+---
+
+**Note**: This is a frontend-only implementation with mock data. Backend integration is required for production use.
