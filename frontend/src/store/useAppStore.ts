@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import * as api from '../services/apiService';
 import type { Transaction } from '../services/apiService';
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from '../services/firebase';
 
 interface User {
     isAuthenticated: boolean;
@@ -91,15 +93,29 @@ const useAppStore = create<AppState>((set, get) => ({
     login: async (method, credentials) => {
         set({ isLoading: true });
         try {
-            const response = await api.login(method, credentials);
-            set({
-                user: {
-                    isAuthenticated: true,
-                    address: response.user.address,
-                    authMethod: method,
-                    id: response.user.id,
-                },
-            });
+            if (method === 'social') {
+                const result = await signInWithPopup(auth, googleProvider);
+                const idToken = await result.user.getIdToken();
+                const response = await api.login(method, { idToken });
+                set({
+                    user: {
+                        isAuthenticated: true,
+                        address: response.user.address,
+                        authMethod: method,
+                        id: response.user.id,
+                    },
+                });
+            } else {
+                const response = await api.login(method, credentials);
+                set({
+                    user: {
+                        isAuthenticated: true,
+                        address: response.user.address,
+                        authMethod: method,
+                        id: response.user.id,
+                    },
+                });
+            }
 
             // Fetch initial data after login
             get().fetchDashboardData();
