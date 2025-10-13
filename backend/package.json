@@ -21,9 +21,12 @@
   },
   "dependencies": {
     "@atomiqlabs/sdk": "^6.0.0",
+    "@simplewebauthn/server": "^10.0.0",
+    "base64url": "^3.0.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "firebase-admin": "^13.5.0",
-    "starknet": "^7.6.4"
+    "starknet": "^7.6.4",
+    "uuid": "^11.0.3"
   }
 }

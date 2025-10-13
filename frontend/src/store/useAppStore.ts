@@ -3,11 +3,15 @@ import * as api from '../services/apiService';
 import type { Transaction } from '../services/apiService';
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from '../services/firebase';
+import { passkeyLogin } from '@/services/passkeyService';
+import { connectBrowserWallet, provisionManagedAccount } from '@/services/starknetService';
+import { demoService, type DashboardData, type Transaction as DemoTransaction, type YieldStrategy } from '../services/demoService';
 
 interface User {
     isAuthenticated: boolean;
     address: string | null;
     authMethod: 'social' | 'passkey' | 'xverse' | null;
+    walletType?: 'managed' | 'xverse' | 'unisat';
     id?: string;
 }
 
@@ -32,18 +36,25 @@ interface AppState {
     depositAddress: string | null;
     xverseBalance: number | null;
 
+    // Demo Data
+    dashboardData: DashboardData | null;
+    availableStrategies: YieldStrategy[];
+    recentDemoTransactions: DemoTransaction[];
+
     // UI State
     activeTab: string;
     isPayModalOpen: boolean;
     isAddFundsModalOpen: boolean;
     isMoreScreenOpen: boolean;
     isYieldStrategiesModalOpen: boolean;
+    isLinkWalletModalOpen: boolean;
 
     // Loading States
     isLoading: boolean;
 
     // Actions
     login: (method: 'social' | 'passkey' | 'xverse', credentials?: any) => Promise<void>;
+    linkWebWallet: () => Promise<void>;
     logout: () => void;
     fetchDashboardData: () => Promise<void>;
     initiatePayment: (invoice: string) => Promise<void>;
@@ -51,12 +62,21 @@ interface AppState {
     fetchDepositAddress: () => Promise<void>;
     fetchXverseBalance: () => Promise<void>;
 
+    // Demo Actions
+    fetchDemoData: () => void;
+    depositToYieldStrategy: (strategyId: string, amount: string) => Promise<void>;
+    withdrawFromYieldStrategy: (strategyId: string, amount: string) => Promise<void>;
+    makeLightningPayment: (amount: string, description: string) => Promise<void>;
+    bridgeBitcoin: (amount: string) => Promise<void>;
+    claimYieldRewards: (protocol: string) => Promise<void>;
+
     // UI Actions
     setActiveTab: (tab: string) => void;
     setPayModalOpen: (isOpen: boolean) => void;
     setAddFundsModalOpen: (isOpen: boolean) => void;
     setMoreScreenOpen: (isOpen: boolean) => void;
     setYieldStrategiesModalOpen: (isOpen: boolean) => void;
+    setLinkWalletModalOpen: (isOpen: boolean) => void;
 }
 
 const useAppStore = create<AppState>((set, get) => ({
@@ -81,11 +101,17 @@ const useAppStore = create<AppState>((set, get) => ({
     depositAddress: null,
     xverseBalance: null,
 
+    // Demo Data
+    dashboardData: null,
+    availableStrategies: [],
+    recentDemoTransactions: [],
+
     activeTab: 'Home',
     isPayModalOpen: false,
     isAddFundsModalOpen: false,
     isMoreScreenOpen: false,
     isYieldStrategiesModalOpen: false,
+    isLinkWalletModalOpen: false,
 
     isLoading: false,
 
@@ -94,24 +120,46 @@ const useAppStore = create<AppState>((set, get) => ({
         set({ isLoading: true });
         try {
             if (method === 'social') {
+                // OAuth via Firebase
                 const result = await signInWithPopup(auth, googleProvider);
                 const idToken = await result.user.getIdToken();
-                const response = await api.login(method, { idToken });
+                // Verify session on backend
+                await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ method: 'social', idToken }) });
+                // Prefer a browser wallet (ArgentX/Braavos); fallback to managed AA
+                const browser = await connectBrowserWallet();
+                const linked = browser || await provisionManagedAccount(idToken);
                 set({
                     user: {
                         isAuthenticated: true,
-                        address: response.user.address,
+                        address: linked.address,
                         authMethod: method,
-                        id: response.user.id,
+                        walletType: linked.walletType ?? 'managed',
+                        id: result.user.uid,
+                    },
+                });
+            } else if (method === 'passkey') {
+                // WebAuthn passkey login/registration
+                const session = await passkeyLogin();
+                const browser = await connectBrowserWallet();
+                const linked = browser || await provisionManagedAccount(session.session);
+                set({
+                    user: {
+                        isAuthenticated: true,
+                        address: linked.address,
+                        authMethod: method,
+                        walletType: linked.walletType ?? 'managed',
+                        id: session.uid,
                     },
                 });
             } else {
+                // xverse or other fallbacks
                 const response = await api.login(method, credentials);
                 set({
                     user: {
                         isAuthenticated: true,
                         address: response.user.address,
                         authMethod: method,
+                        walletType: undefined,
                         id: response.user.id,
                     },
                 });
@@ -123,6 +171,17 @@ const useAppStore = create<AppState>((set, get) => ({
             console.error('Login failed:', error);
         } finally {
             set({ isLoading: false });
+        }
+    },
+
+    linkWebWallet: async () => {
+        try {
+            const linked = await (await import('@/services/starknetService')).connectWebWallet();
+            if (linked) {
+                set({ user: { ...get().user, address: linked.address, walletType: linked.walletType }, isLinkWalletModalOpen: false });
+            }
+        } catch (e) {
+            console.error('Link wallet failed:', e);
         }
     },
 
@@ -162,8 +221,13 @@ const useAppStore = create<AppState>((set, get) => ({
                 },
                 transactions: transactionsData,
             });
+
+            // Also fetch demo data for enhanced experience
+            get().fetchDemoData();
         } catch (error) {
             console.error('Failed to fetch dashboard data:', error);
+            // Fallback to demo data only
+            get().fetchDemoData();
         }
     },
 
@@ -223,12 +287,116 @@ const useAppStore = create<AppState>((set, get) => ({
         }
     },
 
+    // Demo Actions
+    fetchDemoData: () => {
+        const data = demoService.getDashboardData();
+        const strategies = demoService.getYieldStrategies();
+        set({
+            dashboardData: data,
+            availableStrategies: strategies,
+            recentDemoTransactions: data.recentTransactions
+        });
+    },
+
+    depositToYieldStrategy: async (strategyId: string, amount: string) => {
+        set({ isLoading: true });
+        try {
+            const transaction = await demoService.depositToStrategy(strategyId, amount);
+            const currentTransactions = get().recentDemoTransactions;
+            set({
+                recentDemoTransactions: [transaction, ...currentTransactions],
+                isLoading: false
+            });
+
+            // Refresh dashboard data after deposit
+            setTimeout(() => get().fetchDemoData(), 3500); // After confirmation
+        } catch (error) {
+            console.error('Deposit failed:', error);
+            set({ isLoading: false });
+        }
+    },
+
+    withdrawFromYieldStrategy: async (strategyId: string, amount: string) => {
+        set({ isLoading: true });
+        try {
+            const transaction = await demoService.withdrawFromStrategy(strategyId, amount);
+            const currentTransactions = get().recentDemoTransactions;
+            set({
+                recentDemoTransactions: [transaction, ...currentTransactions],
+                isLoading: false
+            });
+
+            // Refresh dashboard data after withdrawal
+            setTimeout(() => get().fetchDemoData(), 4500);
+        } catch (error) {
+            console.error('Withdrawal failed:', error);
+            set({ isLoading: false });
+        }
+    },
+
+    makeLightningPayment: async (amount: string, description: string) => {
+        set({ isLoading: true });
+        try {
+            const transaction = await demoService.makeLightningPayment(amount, description);
+            const currentTransactions = get().recentDemoTransactions;
+            set({
+                recentDemoTransactions: [transaction, ...currentTransactions],
+                isLoading: false
+            });
+
+            // Update balances after payment
+            setTimeout(() => get().fetchDemoData(), 1500);
+        } catch (error) {
+            console.error('Lightning payment failed:', error);
+            set({ isLoading: false });
+        }
+    },
+
+    bridgeBitcoin: async (amount: string) => {
+        set({ isLoading: true });
+        try {
+            const depositAddress = 'bc1q' + Math.random().toString(36).substr(2, 56);
+            const transaction = await demoService.bridgeBTC(amount, depositAddress);
+            const currentTransactions = get().recentDemoTransactions;
+            set({
+                recentDemoTransactions: [transaction, ...currentTransactions],
+                depositAddress,
+                isLoading: false
+            });
+
+            // Update balances after bridge completion
+            setTimeout(() => get().fetchDemoData(), 11000);
+        } catch (error) {
+            console.error('Bridge failed:', error);
+            set({ isLoading: false });
+        }
+    },
+
+    claimYieldRewards: async (protocol: string) => {
+        set({ isLoading: true });
+        try {
+            const transaction = await demoService.claimRewards(protocol);
+            const currentTransactions = get().recentDemoTransactions;
+            set({
+                recentDemoTransactions: [transaction, ...currentTransactions],
+                isLoading: false
+            });
+
+            // Refresh data after claim
+            setTimeout(() => get().fetchDemoData(), 2500);
+        } catch (error) {
+            console.error('Claim failed:', error);
+            set({ isLoading: false });
+        }
+    },
+
     // UI Actions
     setActiveTab: (tab) => set({ activeTab: tab }),
     setPayModalOpen: (isOpen) => set({ isPayModalOpen: isOpen }),
     setAddFundsModalOpen: (isOpen) => set({ isAddFundsModalOpen: isOpen }),
     setMoreScreenOpen: (isOpen) => set({ isMoreScreenOpen: isOpen }),
     setYieldStrategiesModalOpen: (isOpen) => set({ isYieldStrategiesModalOpen: isOpen }),
+    setLinkWalletModalOpen: (isOpen) => set({ isLinkWalletModalOpen: isOpen }),
 }));
 
 export default useAppStore;

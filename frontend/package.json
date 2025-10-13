@@ -10,15 +10,21 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@simplewebauthn/browser": "^10.0.0",
     "@tailwindcss/vite": "^4.1.14",
+    "@types/qrcode": "^1.5.5",
+    "@zxing/browser": "^0.1.5",
+    "@zxing/library": "^0.21.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "firebase": "^11.0.2",
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.544.0",
+    "qrcode": "^1.5.4",
     "qrcode.react": "^4.1.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-qr-reader": "^3.0.0-beta-1",
+    "sats-connect": "^4.1.0",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.14",
     "zustand": "^5.0.3"

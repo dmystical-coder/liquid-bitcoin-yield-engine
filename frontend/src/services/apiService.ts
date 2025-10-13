@@ -94,8 +94,25 @@ export const payLightningInvoice = async (invoice: string): Promise<any> => {
 
 // Get deposit address
 export const getDepositAddress = async (userId: string): Promise<string> => {
-    await delay(MOCK_DELAY);
-    return 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh';
+    // Ask backend bridge for a BTC deposit address that maps to user Starknet account
+    const res = await fetch('/api/bridge/deposit-address', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+    });
+    if (!res.ok) throw new Error('Failed to fetch deposit address');
+    const data = await res.json();
+    return data.depositAddress as string;
+};
+
+export const getBridgeQuote = async (sats: number): Promise<{ usdcAmount: string; rateUsdPerBtc: number }> => {
+    const res = await fetch('/api/bridge/quote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sats })
+    });
+    if (!res.ok) throw new Error('Failed to fetch bridge quote');
+    return res.json();
 };
 
 // Get available yield strategies
