@@ -26,7 +26,7 @@ export default function Button({
   const variantStyles = {
     primary: "bg-[rgb(0,122,255)] text-white hover:bg-[rgb(20,142,255)]",
     secondary:
-      "bg-[rgb(25,25,35)] text-[rgb(245,245,255)] hover:bg-[rgb(35,35,45)] border border-[rgb(45,45,55)]",
+      "bg-[rgb(30,30,40)] text-white hover:bg-[rgb(40,40,50)] border border-[rgb(60,60,70)]",
   };
 
   return (

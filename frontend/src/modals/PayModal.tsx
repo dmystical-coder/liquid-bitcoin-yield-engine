@@ -4,11 +4,17 @@ import Input from "../components/Input";
 import Button from "../components/Button";
 import QRScanner from "../components/QRScanner";
 import useAppStore from "../store/useAppStore";
-import { Scan, Zap, Coffee, Utensils, ShoppingCart, Gamepad2 } from "lucide-react";
+import { Scan, Coffee, Utensils, ShoppingCart, Gamepad2 } from "lucide-react";
 
 export default function PayModal() {
-  const { isPayModalOpen, setPayModalOpen, initiatePayment, makeLightningPayment, dashboardData, isLoading } =
-    useAppStore();
+  const {
+    isPayModalOpen,
+    setPayModalOpen,
+    initiatePayment,
+    makeLightningPayment,
+    dashboardData,
+    isLoading,
+  } = useAppStore();
   const [invoice, setInvoice] = useState("");
   const [showScanner, setShowScanner] = useState(false);
   const [showQuickPay, setShowQuickPay] = useState(true);
@@ -16,10 +22,30 @@ export default function PayModal() {
 
   // Quick pay options for demo
   const quickPayOptions = [
-    { name: "Coffee Shop", amount: "0.00015", icon: Coffee, description: "Local Cafe" },
-    { name: "Restaurant", amount: "0.00085", icon: Utensils, description: "Dinner for 2" },
-    { name: "Online Store", amount: "0.0003", icon: ShoppingCart, description: "Digital goods" },
-    { name: "Gaming Credit", amount: "0.0005", icon: Gamepad2, description: "In-game purchase" },
+    {
+      name: "Coffee Shop",
+      amount: "0.00015",
+      icon: Coffee,
+      description: "Local Cafe",
+    },
+    {
+      name: "Restaurant",
+      amount: "0.00085",
+      icon: Utensils,
+      description: "Dinner for 2",
+    },
+    {
+      name: "Online Store",
+      amount: "0.0003",
+      icon: ShoppingCart,
+      description: "Digital goods",
+    },
+    {
+      name: "Gaming Credit",
+      amount: "0.0005",
+      icon: Gamepad2,
+      description: "In-game purchase",
+    },
   ];
 
   const handlePay = async () => {
@@ -29,7 +55,7 @@ export default function PayModal() {
     setShowScanner(false);
   };
 
-  const handleQuickPay = async (option: typeof quickPayOptions[0]) => {
+  const handleQuickPay = async (option: (typeof quickPayOptions)[0]) => {
     await makeLightningPayment(option.amount, `Payment to ${option.name}`);
     setPayModalOpen(false);
   };
@@ -61,7 +87,9 @@ export default function PayModal() {
         {/* Balance Display */}
         <div className="p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-[12px] border border-orange-200">
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-gray-700">Available Bitcoin</span>
+            <span className="text-sm font-medium text-gray-700">
+              Available Bitcoin
+            </span>
             <span className="text-lg font-bold text-gray-900">
               ⚡ {availableBTC.toFixed(5)} BTC
             </span>
@@ -75,19 +103,21 @@ export default function PayModal() {
         <div className="flex border border-gray-200 rounded-[8px] overflow-hidden">
           <button
             onClick={() => setShowQuickPay(true)}
-            className={`flex-1 py-2 px-4 text-sm font-medium transition-colors ${showQuickPay
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-              }`}
+            className={`flex-1 py-2 px-4 text-sm font-medium transition-colors ${
+              showQuickPay
+                ? "bg-blue-500 text-white"
+                : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+            }`}
           >
             Quick Pay
           </button>
           <button
             onClick={() => setShowQuickPay(false)}
-            className={`flex-1 py-2 px-4 text-sm font-medium transition-colors ${!showQuickPay
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-              }`}
+            className={`flex-1 py-2 px-4 text-sm font-medium transition-colors ${
+              !showQuickPay
+                ? "bg-blue-500 text-white"
+                : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+            }`}
           >
             Manual Invoice
           </button>
@@ -96,7 +126,9 @@ export default function PayModal() {
         {showQuickPay ? (
           /* Quick Pay Options */
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-gray-700">Demo Merchants</h3>
+            <h3 className="text-sm font-semibold text-gray-700">
+              Demo Merchants
+            </h3>
             {quickPayOptions.map((option, index) => {
               const Icon = option.icon;
               const amountUSD = (parseFloat(option.amount) * 65000).toFixed(2);
@@ -111,11 +143,15 @@ export default function PayModal() {
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">{option.name}</p>
-                      <p className="text-sm text-gray-500">{option.description}</p>
+                      <p className="text-sm text-gray-500">
+                        {option.description}
+                      </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-gray-900">⚡ {option.amount} BTC</p>
+                    <p className="font-semibold text-gray-900">
+                      ⚡ {option.amount} BTC
+                    </p>
                     <p className="text-sm text-gray-500">${amountUSD}</p>
                     <Button
                       variant="secondary"
@@ -132,7 +168,9 @@ export default function PayModal() {
 
             {/* Custom Amount */}
             <div className="p-4 border border-dashed border-gray-300 rounded-[12px]">
-              <p className="text-sm font-medium text-gray-700 mb-3">Custom Amount</p>
+              <p className="text-sm font-medium text-gray-700 mb-3">
+                Custom Amount
+              </p>
               <div className="flex gap-3">
                 <Input
                   type="number"

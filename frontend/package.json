@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@reown/appkit": "^1.8.10",
+    "@reown/appkit-adapter-bitcoin": "^1.8.10",
     "@simplewebauthn/browser": "^10.0.0",
     "@tailwindcss/vite": "^4.1.14",
     "@types/qrcode": "^1.5.5",

@@ -14,8 +14,17 @@ import base64url from 'base64url';
 
 dotenv.config();
 
-const serviceAccountPath = path.resolve(__dirname, process.env.SERVICE_ACCOUNT_KEY_PATH as string);
-const serviceAccount = require(serviceAccountPath);
+// Load Firebase service account key. Allow override via SERVICE_ACCOUNT_KEY_PATH env var but fall back to ../serviceAccountKey.json
+let serviceAccount: admin.ServiceAccount;
+try {
+    const serviceAccountPath = process.env.SERVICE_ACCOUNT_KEY_PATH
+        ? path.resolve(__dirname, process.env.SERVICE_ACCOUNT_KEY_PATH)
+        : path.resolve(__dirname, '../serviceAccountKey.json');
+    serviceAccount = require(serviceAccountPath);
+} catch (err) {
+    console.error('Failed to load Firebase service account key. Please set SERVICE_ACCOUNT_KEY_PATH env var or place serviceAccountKey.json in backend directory.', err);
+    process.exit(1);
+}
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)

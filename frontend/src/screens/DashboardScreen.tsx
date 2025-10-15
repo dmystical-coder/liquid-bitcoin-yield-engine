@@ -8,6 +8,7 @@ import ResponsiveContainer from "../components/ResponsiveContainer";
 
 export default function DashboardScreen() {
   const {
+    user,
     balance,
     yieldInfo,
     transactions,
@@ -16,6 +17,8 @@ export default function DashboardScreen() {
     activeTab,
     setActiveTab,
     fetchDashboardData,
+    fetchBitcoinWalletData,
+    isLoading,
   } = useAppStore();
 
   useEffect(() => {
@@ -37,11 +40,50 @@ export default function DashboardScreen() {
     }
   };
 
+  const isXverseWallet = user.authMethod === "xverse";
+
+  const handleRefresh = async () => {
+    if (isXverseWallet) {
+      await fetchBitcoinWalletData();
+    } else {
+      await fetchDashboardData();
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto pb-24">
         <ResponsiveContainer>
+          {/* Wallet Info Banner for Xverse */}
+          {isXverseWallet && user.address && (
+            <motion.div
+              className="mt-4 p-3 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-[12px] border border-orange-200"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-sm font-medium text-gray-700">
+                    Bitcoin Wallet Connected
+                  </span>
+                </div>
+                <button
+                  onClick={handleRefresh}
+                  disabled={isLoading}
+                  className="text-xs text-orange-600 hover:text-orange-700 font-medium disabled:opacity-50"
+                >
+                  {isLoading ? "Refreshing..." : "Refresh"}
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-1 font-mono">
+                {user.address.substring(0, 8)}...
+                {user.address.substring(user.address.length - 8)}
+              </p>
+            </motion.div>
+          )}
+
           {/* Balance Section */}
           <motion.div
             className="pt-12"
@@ -50,11 +92,24 @@ export default function DashboardScreen() {
             transition={{ duration: 0.3 }}
           >
             <BalanceDisplay
-              btcAmount={dashboardData ? parseFloat(dashboardData.btcBalance) : balance.btc}
-              usdAmount={dashboardData ? parseFloat(dashboardData.totalBalance) : balance.usd}
-              showAPY={true}
+              btcAmount={
+                dashboardData
+                  ? parseFloat(dashboardData.btcBalance)
+                  : balance.btc
+              }
+              usdAmount={
+                dashboardData
+                  ? parseFloat(dashboardData.totalBalance)
+                  : balance.usd
+              }
+              showAPY={!isXverseWallet}
               apy={dashboardData ? 9.2 : yieldInfo.apy}
             />
+            {isXverseWallet && (
+              <p className="text-xs text-center text-gray-500 mt-2">
+                💡 Connect to yield strategies to start earning on your Bitcoin
+              </p>
+            )}
           </motion.div>
 
           {/* Active Yield Positions */}
@@ -70,7 +125,9 @@ export default function DashboardScreen() {
                   Active Positions
                 </h2>
                 <button
-                  onClick={() => useAppStore.getState().setYieldStrategiesModalOpen(true)}
+                  onClick={() =>
+                    useAppStore.getState().setYieldStrategiesModalOpen(true)
+                  }
                   className="text-[rgb(0,122,255)] text-sm font-medium hover:underline"
                 >
                   Manage
@@ -89,15 +146,21 @@ export default function DashboardScreen() {
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-gray-900">{position.protocol}</span>
+                          <span className="font-semibold text-gray-900">
+                            {position.protocol}
+                          </span>
                           <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
                             {position.apy}% APY
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600 mb-2">{position.strategy}</p>
+                        <p className="text-sm text-gray-600 mb-2">
+                          {position.strategy}
+                        </p>
                         <div className="flex items-center gap-4 text-xs text-gray-500">
                           <span>Deposited: ${position.deposited}</span>
-                          <span className="text-green-600 font-medium">Earned: +${position.earned}</span>
+                          <span className="text-green-600 font-medium">
+                            Earned: +${position.earned}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -120,30 +183,58 @@ export default function DashboardScreen() {
 
             <div className="flex flex-col gap-3">
               {/* Show demo transactions if available, fallback to regular transactions */}
-              {(recentDemoTransactions.length > 0 ? recentDemoTransactions : transactions).length === 0 ? (
+              {(recentDemoTransactions.length > 0
+                ? recentDemoTransactions
+                : transactions
+              ).length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-secondary body-primary">
                     No transactions yet
                   </p>
                 </div>
               ) : (
-                (recentDemoTransactions.length > 0 ? recentDemoTransactions : transactions).map((transaction, index) => (
+                (recentDemoTransactions.length > 0
+                  ? recentDemoTransactions
+                  : transactions
+                ).map((transaction, index) => (
                   <motion.div
-                    key={'id' in transaction ? transaction.id : index}
+                    key={"id" in transaction ? transaction.id : index}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
                   >
                     <TransactionRow
                       type={transaction.type}
-                      amount={'amount' in transaction ? transaction.amount : undefined}
-                      token={'token' in transaction ? transaction.token : undefined}
-                      amountBtc={'amountBtc' in transaction ? transaction.amountBtc : undefined}
-                      date={'date' in transaction ? transaction.date : undefined}
+                      amount={
+                        "amount" in transaction ? transaction.amount : undefined
+                      }
+                      token={
+                        "token" in transaction ? transaction.token : undefined
+                      }
+                      amountBtc={
+                        "amountBtc" in transaction
+                          ? transaction.amountBtc
+                          : undefined
+                      }
+                      date={
+                        "date" in transaction ? transaction.date : undefined
+                      }
                       status={transaction.status}
-                      timestamp={'timestamp' in transaction ? transaction.timestamp : undefined}
-                      description={'description' in transaction ? transaction.description : undefined}
-                      protocol={'protocol' in transaction ? transaction.protocol : undefined}
+                      timestamp={
+                        "timestamp" in transaction
+                          ? transaction.timestamp
+                          : undefined
+                      }
+                      description={
+                        "description" in transaction
+                          ? transaction.description
+                          : undefined
+                      }
+                      protocol={
+                        "protocol" in transaction
+                          ? transaction.protocol
+                          : undefined
+                      }
                     />
                   </motion.div>
                 ))

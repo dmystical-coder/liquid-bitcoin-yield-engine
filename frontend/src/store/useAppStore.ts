@@ -6,6 +6,7 @@ import { auth, googleProvider } from '../services/firebase';
 import { passkeyLogin } from '@/services/passkeyService';
 import { connectBrowserWallet, provisionManagedAccount } from '@/services/starknetService';
 import { demoService, type DashboardData, type Transaction as DemoTransaction, type YieldStrategy } from '../services/demoService';
+import * as xverseApi from '../services/xverseApiService';
 
 interface User {
     isAuthenticated: boolean;
@@ -54,9 +55,11 @@ interface AppState {
 
     // Actions
     login: (method: 'social' | 'passkey' | 'xverse', credentials?: any) => Promise<void>;
+    loginWithBitcoinWallet: (walletInfo: { address: string; walletType: string }) => Promise<void>;
     linkWebWallet: () => Promise<void>;
     logout: () => void;
     fetchDashboardData: () => Promise<void>;
+    fetchBitcoinWalletData: () => Promise<void>;
     initiatePayment: (invoice: string) => Promise<void>;
     updateStrategy: (strategy: 'Standard' | 'Turbo' | 'Maxi') => Promise<void>;
     fetchDepositAddress: () => Promise<void>;
@@ -174,6 +177,21 @@ const useAppStore = create<AppState>((set, get) => ({
         }
     },
 
+    loginWithBitcoinWallet: async (walletInfo) => {
+        set({
+            user: {
+                isAuthenticated: true,
+                address: walletInfo.address,
+                authMethod: 'xverse',
+                walletType: walletInfo.walletType as 'managed' | 'xverse' | 'unisat',
+                id: walletInfo.address, // Use address as ID for now
+            },
+        });
+
+        // Fetch real Bitcoin wallet data
+        await get().fetchBitcoinWalletData();
+    },
+
     linkWebWallet: async () => {
         try {
             const linked = await (await import('@/services/starknetService')).connectWebWallet();
@@ -202,7 +220,15 @@ const useAppStore = create<AppState>((set, get) => ({
 
     fetchDashboardData: async () => {
         const userId = get().user.id;
+        const authMethod = get().user.authMethod;
+
         if (!userId) return;
+
+        // If Bitcoin wallet, fetch real data from Xverse API
+        if (authMethod === 'xverse') {
+            await get().fetchBitcoinWalletData();
+            return;
+        }
 
         try {
             const [balanceData, transactionsData] = await Promise.all([
@@ -227,6 +253,58 @@ const useAppStore = create<AppState>((set, get) => ({
         } catch (error) {
             console.error('Failed to fetch dashboard data:', error);
             // Fallback to demo data only
+            get().fetchDemoData();
+        }
+    },
+
+    fetchBitcoinWalletData: async () => {
+        const address = get().user.address;
+        if (!address) return;
+
+        set({ isLoading: true });
+
+        try {
+            // Fetch balance and transactions from Xverse API
+            const [balanceData, activityData, btcPrice] = await Promise.all([
+                xverseApi.getAddressBalance(address),
+                xverseApi.getAddressActivity(address, 20, 0),
+                xverseApi.getBitcoinPrice(),
+            ]);
+
+            // Convert satoshis to BTC
+            const btcBalance = xverseApi.satoshisToBTC(balanceData.confirmed_balance);
+            const usdBalance = btcBalance * btcPrice;
+
+            // Parse transactions
+            const transactions: Transaction[] = activityData.results.map(tx => {
+                const parsed = xverseApi.parseTransaction(tx, address);
+                return {
+                    type: parsed.type,
+                    amountBtc: parsed.amountBtc,
+                    date: parsed.date,
+                    status: parsed.status,
+                };
+            });
+
+            set({
+                balance: {
+                    btc: btcBalance,
+                    usd: usdBalance,
+                },
+                yieldInfo: {
+                    apy: 0, // No yield for pure Bitcoin wallet yet
+                    currentStrategy: 'Standard',
+                },
+                transactions,
+                isLoading: false,
+            });
+
+            // Also fetch demo data for enhanced experience (yield strategies, etc.)
+            get().fetchDemoData();
+        } catch (error) {
+            console.error('Failed to fetch Bitcoin wallet data:', error);
+            set({ isLoading: false });
+            // Fallback to demo data
             get().fetchDemoData();
         }
     },

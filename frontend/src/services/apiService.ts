@@ -23,7 +23,7 @@ export interface YieldStrategy {
 }
 
 // Mock user authentication
-export const login = async (method: string, credentials?: any): Promise<any> => {
+export const login = async (method: string, _credentials?: any): Promise<any> => {
     await delay(MOCK_DELAY);
     return {
         success: true,
@@ -36,7 +36,7 @@ export const login = async (method: string, credentials?: any): Promise<any> => 
 };
 
 // Get user balance
-export const getBalance = async (userId: string): Promise<Balance> => {
+export const getBalance = async (_userId: string): Promise<Balance> => {
     await delay(MOCK_DELAY);
     return {
         btc: 1.05432,
@@ -46,7 +46,7 @@ export const getBalance = async (userId: string): Promise<Balance> => {
 };
 
 // Get user transactions
-export const getTransactions = async (userId: string): Promise<Transaction[]> => {
+export const getTransactions = async (_userId: string): Promise<Transaction[]> => {
     await delay(MOCK_DELAY);
     return [
         {
@@ -83,7 +83,7 @@ export const getTransactions = async (userId: string): Promise<Transaction[]> =>
 };
 
 // Pay Lightning invoice
-export const payLightningInvoice = async (invoice: string): Promise<any> => {
+export const payLightningInvoice = async (_invoice: string): Promise<any> => {
     await delay(MOCK_DELAY);
     return {
         success: true,
@@ -138,7 +138,7 @@ export const getYieldStrategies = async (): Promise<YieldStrategy[]> => {
 };
 
 // Update yield strategy
-export const updateYieldStrategy = async (userId: string, strategy: string): Promise<any> => {
+export const updateYieldStrategy = async (_userId: string, strategy: string): Promise<any> => {
     await delay(MOCK_DELAY);
     return {
         success: true,
@@ -153,7 +153,7 @@ export const getXverseBalance = async (): Promise<number> => {
 };
 
 // Deposit from Xverse
-export const depositFromXverse = async (amount: number, method: 'lightning' | 'onchain'): Promise<any> => {
+export const depositFromXverse = async (amount: number, _method: 'lightning' | 'onchain'): Promise<any> => {
     await delay(MOCK_DELAY);
     return {
         success: true,

@@ -11,9 +11,9 @@ export interface LinkedAccount {
 export async function connectBrowserWallet(): Promise<LinkedAccount | null> {
     try {
         const response = await request('wallet_connect', {
-            addresses: ['starknet'], // Request only Starknet address for our Bitcoin-first app
+            addresses: ['starknet'] as any, // Request only Starknet address for our Bitcoin-first app
             message: 'Connect your Bitcoin wallet to access Starknet DeFi features',
-            network: 'Mainnet'
+            network: 'Mainnet' as any
         });
 
         if (response.status === 'success') {
@@ -36,9 +36,9 @@ export async function connectBrowserWallet(): Promise<LinkedAccount | null> {
 export async function connectWebWallet(): Promise<LinkedAccount | null> {
     try {
         const response = await request('wallet_connect', {
-            addresses: ['payment', 'ordinals', 'starknet'], // Full Bitcoin + Starknet support
+            addresses: ['payment', 'ordinals', 'starknet'] as any, // Full Bitcoin + Starknet support
             message: 'Link your Bitcoin wallet to unlock advanced features',
-            network: 'Mainnet'
+            network: 'Mainnet' as any
         });
 
         if (response.status === 'success') {
